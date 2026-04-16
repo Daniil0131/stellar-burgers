@@ -1,23 +1,32 @@
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
-import { TIngredient } from '@utils-types';
+import { TIngredient, TOrder } from '@utils-types';
+import { useSelector } from '../../services/store';
+import { getOrderByNumberApi } from '../../utils/burger-api';
 
 export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+  const { number } = useParams();
+  const ingredients = useSelector((state) => state.ingredients.items);
 
-  const ingredients: TIngredient[] = [];
+  const [orderData, setOrderData] = useState<TOrder | null>(null);
 
-  /* Готовим данные для отображения */
+  useEffect(() => {
+    if (!number) return;
+
+    getOrderByNumberApi(Number(number))
+      .then((data) => {
+        if (data.success && data.orders.length > 0) {
+          setOrderData(data.orders[0]);
+        }
+      })
+      .catch((error) => {
+        console.error('Ошибка получения заказа:', error);
+      });
+  }, [number]);
+
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;
 
